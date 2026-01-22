@@ -59,6 +59,8 @@ def main():
         # Tabs для ввода и загрузки файла
         input_tab, upload_tab = st.tabs(["📄 Текст", "📁 Файл"])
         
+        java_code = ""
+        
         with input_tab:
             java_code = st.text_area(
                 "Вставьте ваш Java код здесь:",
@@ -67,26 +69,20 @@ def main():
     public int add(int a, int b) {
         return a + b;
     }
-}""",
-                key="java_input"
+}"""
             )
         
         with upload_tab:
             uploaded_file = st.file_uploader(
                 "Загрузите Java файл",
-                type=["java"],
-                key="java_file_upload"
+                type=["java"]
             )
-            java_code_from_file = ""
             if uploaded_file is not None:
                 java_code_from_file = uploaded_file.read().decode("utf-8")
                 st.success(f"✅ Файл загружен: {uploaded_file.name}")
                 st.code(java_code_from_file, language="java")
-                if st.button("📌 Использовать этот код", use_container_width=True):
-                    st.session_state.java_input = java_code_from_file
-                    st.rerun()
-            
-            java_code = java_code or java_code_from_file
+                # Используем загруженный код для трансляции
+                java_code = java_code_from_file
     
     with col2:
         st.subheader("🎯 Вывод кода на C#")
