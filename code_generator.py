@@ -2,9 +2,10 @@ from ast_nodes import *
 from typing import List, Optional
 
 class CodeGenerator:
-    def __init__(self):
+    def __init__(self, add_main: bool = True):
         self.indent_level = 0
         self.indent_str = "    "
+        self.add_main = add_main
     
     def generate(self, program: Program) -> str:
         code = ""
@@ -48,6 +49,12 @@ class CodeGenerator:
         
         if class_decl.fields and class_decl.methods:
             code += "\n"
+
+        # Ensure entry point exists so generated code runs as a console app.
+        if self.add_main and not self.has_main_method(class_decl):
+            code += self.generate_main_stub()
+            if class_decl.methods:
+                code += "\n"
         
         # Generate methods
         for i, method in enumerate(class_decl.methods):
@@ -81,6 +88,18 @@ class CodeGenerator:
         code = f"{self.get_indent()}public {return_type} {method.name}({params})\n"
         code += self.generate_block(method.body)
         
+        return code
+
+    def has_main_method(self, class_decl: ClassDeclaration) -> bool:
+        return any(method.name == "Main" for method in class_decl.methods)
+
+    def generate_main_stub(self) -> str:
+        code = f"{self.get_indent()}public static void Main(string[] args)\n"
+        code += f"{self.get_indent()}{{\n"
+        self.indent()
+        code += f"{self.get_indent()}// Entry point\n"
+        self.dedent()
+        code += f"{self.get_indent()}}}\n"
         return code
     
     def generate_block(self, block: Block) -> str:
@@ -219,7 +238,11 @@ class CodeGenerator:
         elif isinstance(expr, UnaryOperation):
             operand = self.generate_expression(expr.operand)
             if expr.operator in ['post++', 'post--']:
-                return f"({operand}{expr.operator[4:]})"
+                # Avoid parentheses: C# disallows parenthesized increment as statement-expression.
+                return f"{operand}{expr.operator[4:]}"
+            elif expr.operator in ['++', '--']:
+                # Prefix increment/decrement should also stay un-parenthesized for statement-expression usage.
+                return f"{expr.operator}{operand}"
             else:
                 return f"({expr.operator}{operand})"
         
@@ -265,7 +288,23 @@ class CodeGenerator:
         )
         
         if method_call.object_ref:
+            # Check if this is System.out.println() before generating the object ref
+            # because object_ref might be a MethodCall for System.out()
+            if isinstance(method_call.object_ref, MethodCall):
+                # Check for System.out() pattern
+                obj_ref = method_call.object_ref
+                if (obj_ref.method_name == "out" and 
+                    isinstance(obj_ref.object_ref, Identifier) and 
+                    obj_ref.object_ref.name == "System" and
+                    method_call.method_name == "println"):
+                    return f"System.Console.WriteLine({args})"
+            
             obj = self.generate_expression(method_call.object_ref)
+            
+            # Handle System.out.println() -> System.Console.WriteLine()
+            if obj == "System.out" and method_call.method_name == "println":
+                return f"System.Console.WriteLine({args})"
+            
             return f"{obj}.{method_call.method_name}({args})"
         else:
             # Static method or function

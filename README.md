@@ -113,6 +113,11 @@ using System.Text;
 
 public class Calculator
 {
+    public static void Main(string[] args)
+    {
+        // Entry point
+    }
+
     public int add(int a, int b)
     {
         return (a + b);
@@ -146,6 +151,11 @@ class Logic {
 ```csharp
 public class Logic
 {
+    public static void Main(string[] args)
+    {
+        // Entry point
+    }
+
     public void processNumber(int n)
     {
         if ((n > 0))
@@ -173,6 +183,27 @@ class Counter {
         int sum = 0;
         for (int i = 1; i <= n; i++) {
             sum = sum + i;
+        }
+        return sum;
+    }
+}
+```
+
+**Сгенерированный C# код:**
+```csharp
+public class Counter
+{
+    public static void Main(string[] args)
+    {
+        // Entry point
+    }
+
+    public int sumNumbers(int n)
+    {
+        int sum = 0;
+        for (int i = 1; i <= n; i++)
+        {
+            sum = (sum + i);
         }
         return sum;
     }

@@ -2,32 +2,115 @@ import streamlit as st
 from parser import parse
 from semantic_analyzer import SemanticAnalyzer
 from code_generator import CodeGenerator
+from datetime import datetime
 
-def translate_java_to_csharp(java_code: str) -> tuple[bool, str]:
+class TranslationLogger:
+    def __init__(self):
+        self.logs = []
+    
+    def add_log(self, level: str, message: str):
+        """Добавить логи с меткой времени"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        log_entry = f"[{timestamp}] [{level}] {message}"
+        self.logs.append((level, log_entry))
+    
+    def info(self, message: str):
+        self.add_log("INFO", message)
+    
+    def error(self, message: str):
+        self.add_log("ERROR", message)
+    
+    def warning(self, message: str):
+        self.add_log("WARNING", message)
+    
+    def success(self, message: str):
+        self.add_log("SUCCESS", message)
+    
+    def get_logs(self):
+        return self.logs
+    
+    def clear(self):
+        self.logs = []
+
+# Инициализируем логгер в session_state
+if "logger" not in st.session_state:
+    st.session_state.logger = TranslationLogger()
+
+def translate_java_to_csharp(java_code: str, add_main: bool) -> tuple[bool, str]:
     """
     Translates Java code to C# code.
     Returns (success: bool, result: str)
     """
+    logger = st.session_state.logger
+    logger.clear()
+    
     try:
+        logger.info("🔍 Начало анализа Java кода...")
+        
         # Lexical analysis and parsing
+        logger.info("📝 Лексический анализ (tokenization)...")
         ast = parse(java_code)
+        logger.success("✅ Лексический анализ завершен успешно")
         
         # Semantic analysis
+        logger.info("🔎 Семантический анализ...")
         analyzer = SemanticAnalyzer()
         if not analyzer.analyze(ast):
             errors = "\n".join(analyzer.errors)
+            for error in analyzer.errors:
+                logger.error(f"Ошибка валидации: {error}")
             return False, f"Ошибки семантического анализа:\n{errors}"
+        logger.success("✅ Семантический анализ завершен успешно")
         
         # Code generation
-        generator = CodeGenerator()
+        logger.info("⚙️ Генерация C# кода...")
+        generator = CodeGenerator(add_main=add_main)
         csharp_code = generator.generate(ast)
+        logger.success("✅ Код на C# сгенерирован успешно")
         
+        logger.success("🎉 Трансляция завершена успешно!")
         return True, csharp_code
     
     except SyntaxError as e:
-        return False, f"Ошибка синтаксиса: {str(e)}"
+        error_msg = f"Ошибка синтаксиса: {str(e)}"
+        logger.error(error_msg)
+        return False, error_msg
     except Exception as e:
-        return False, f"Ошибка: {str(e)}"
+        error_msg = f"Непредвиденная ошибка: {str(e)}"
+        logger.error(error_msg)
+        return False, error_msg
+
+def display_terminal_logs():
+    """Отобразить терминал с логами"""
+    logger = st.session_state.logger
+    logs = logger.get_logs()
+    
+    # Контейнер для терминала
+    st.subheader("🖥️ Терминал логов")
+    
+    # Стиль для терминала
+    terminal_content = ""
+    for level, log_entry in logs:
+        if level == "ERROR":
+            terminal_content += f"🔴 {log_entry}\n"
+        elif level == "SUCCESS":
+            terminal_content += f"🟢 {log_entry}\n"
+        elif level == "WARNING":
+            terminal_content += f"🟡 {log_entry}\n"
+        else:
+            terminal_content += f"⚪ {log_entry}\n"
+    
+    # Отобразить логи в контейнере похожем на терминал
+    if logs:
+        # Используем text_area для скроллируемого вывода
+        st.text_area(
+            "Вывод:",
+            value=terminal_content,
+            height=150,
+            disabled=True
+        )
+    else:
+        st.info("⏳ Логи будут отображаться здесь после запуска трансляции...")
 
 def main():
     st.set_page_config(
@@ -87,11 +170,14 @@ def main():
     with col2:
         st.subheader("🎯 Вывод кода на C#")
         
+        add_main = st.checkbox("✅ Добавлять Main", value=True)
+
         if st.button("▶️ Транслировать", use_container_width=True):
             if not java_code.strip():
                 st.warning("⚠️ Пожалуйста, введите Java код!")
+                st.session_state.logger.warning("Попытка трансляции пустого кода")
             else:
-                success, result = translate_java_to_csharp(java_code)
+                success, result = translate_java_to_csharp(java_code, add_main)
                 
                 if success:
                     st.success("✅ Трансляция успешна!")
@@ -111,7 +197,10 @@ def main():
     
     st.divider()
     
-    # Examples section
+    # Постоянный терминал логов сразу после ввода кода
+    display_terminal_logs()
+    
+    st.divider()
     st.subheader("📚 Примеры")
     
     examples = {
