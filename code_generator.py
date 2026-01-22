@@ -79,13 +79,24 @@ class CodeGenerator:
     
     def generate_method(self, method: MethodDeclaration) -> str:
         return_type = self.convert_type(method.return_type)
+        method_name = method.name
+        is_static = False
+
+        # Java entry point: public void main(String[] args) -> C# static void Main(string[] args)
+        if (method.name == "main" and method.return_type == "void" and
+            len(method.parameters) == 1 and
+            method.parameters[0].param_type == "String[]" and
+            method.parameters[0].name == "args"):
+            method_name = "Main"
+            is_static = True
         
         params = ", ".join(
             f"{self.convert_type(p.param_type)} {p.name}" 
             for p in method.parameters
         )
         
-        code = f"{self.get_indent()}public {return_type} {method.name}({params})\n"
+        static_str = "static " if is_static else ""
+        code = f"{self.get_indent()}public {static_str}{return_type} {method_name}({params})\n"
         code += self.generate_block(method.body)
         
         return code
@@ -319,6 +330,11 @@ class CodeGenerator:
     
     def convert_type(self, java_type: str) -> str:
         """Convert Java types to C# types"""
+        # Preserve array suffixes if present.
+        array_suffix = ""
+        while java_type.endswith("[]"):
+            array_suffix += "[]"
+            java_type = java_type[:-2]
         type_map = {
             "int": "int",
             "double": "double",
@@ -326,4 +342,4 @@ class CodeGenerator:
             "boolean": "bool",
             "void": "void",
         }
-        return type_map.get(java_type, java_type)
+        return type_map.get(java_type, java_type) + array_suffix

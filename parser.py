@@ -61,8 +61,7 @@ class Parser:
         
         while not self.match(TokenType.RBRACE):
             # Check if it's a field or method
-            is_static = self.consume(TokenType.STATIC)
-            is_public = self.consume(TokenType.PUBLIC) or self.consume(TokenType.PRIVATE)
+            self.parse_modifiers()
             
             field_type = self.parse_type()
             name_token = self.expect(TokenType.IDENTIFIER)
@@ -89,26 +88,38 @@ class Parser:
         return ClassDeclaration(class_name, methods, fields)
     
     def parse_type(self) -> str:
+        base_type = None
         if self.match(TokenType.INT):
             self.advance()
-            return "int"
+            base_type = "int"
         elif self.match(TokenType.DOUBLE):
             self.advance()
-            return "double"
+            base_type = "double"
         elif self.match(TokenType.STRING):
             self.advance()
-            return "String"
+            base_type = "String"
         elif self.match(TokenType.BOOLEAN):
             self.advance()
-            return "boolean"
+            base_type = "boolean"
         elif self.match(TokenType.VOID):
             self.advance()
-            return "void"
+            base_type = "void"
         elif self.match(TokenType.IDENTIFIER):
             token = self.advance()
-            return token.value
+            base_type = token.value
         else:
             self.error("Expected type")
+
+        # Parse array suffixes: [], [][]
+        while self.consume(TokenType.LBRACKET):
+            self.expect(TokenType.RBRACKET)
+            base_type += "[]"
+        return base_type
+
+    def parse_modifiers(self):
+        # Allow any order of modifiers like "public static" or "static public"
+        while self.match(TokenType.PUBLIC, TokenType.PRIVATE, TokenType.PROTECTED, TokenType.STATIC):
+            self.advance()
     
     def parse_method(self, return_type: str, name: str) -> MethodDeclaration:
         self.expect(TokenType.LPAREN)
@@ -223,7 +234,7 @@ class Parser:
         # Parse init
         init = None
         if not self.match(TokenType.SEMICOLON):
-            if self.match(TokenType.INT, TokenType.DOUBLE, TokenType.STRING, TokenType.BOOLEAN):
+            if self.match(TokenType.INT, TokenType.DOUBLE, TokenType.STRING, TokenType.BOOLEAN, TokenType.IDENTIFIER):
                 var_type = self.parse_type()
                 var_name = self.expect(TokenType.IDENTIFIER).value
                 

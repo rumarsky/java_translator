@@ -126,6 +126,7 @@ def main():
     **Поддерживаемые функции:**
     - Классы и методы
     - Основные типы данных (int, double, String, boolean)
+    - Массивы: типы `T[]` и доступ по индексу
     - Переменные и присваивания
     - Управление потоком (if/else, while, for циклы)
     - Вызовы методов и создание объектов
@@ -258,7 +259,7 @@ def main():
         
         with col2_ex:
             if st.button("🔄 Транслировать этот пример", use_container_width=True):
-                success, result = translate_java_to_csharp(example_code)
+                success, result = translate_java_to_csharp(example_code, True)
                 
                 if success:
                     st.success("✅ Трансляция успешна!")
@@ -292,18 +293,21 @@ def main():
         
         **Поддерживается:**
         - ✅ Классы, методы и поля
-        - ✅ Основные типы: int, double, String, boolean
+        - ✅ Основные типы: int, double, String, boolean, void
+        - ✅ Массивы: типы `T[]` и доступ по индексу
         - ✅ Управление потоком: if/else, while, for
         - ✅ Операторы и выражения
         - ✅ Вызовы методов и создание объектов
+        - ✅ System.out.println → System.Console.WriteLine
         
         **Не поддерживается:**
         - ❌ Наследование и интерфейсы
         - ❌ Обобщения (Generics)
         - ❌ Аннотации
         - ❌ Обработка исключений
-        - ❌ Массивы (полная поддержка)
+        - ❌ Создание массивов с размером (`new int[10]`) и литералы массивов
         - ❌ Lambda выражения
+        - ❌ Полное сохранение модификаторов (public/private/protected/static)
         - ❌ Продвинутые функции Java
         
         ### Отображение типов
