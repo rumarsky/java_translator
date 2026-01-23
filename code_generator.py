@@ -289,6 +289,8 @@ class CodeGenerator:
             return "true" if literal.value else "false"
         elif literal.literal_type == "double":
             return str(literal.value)
+        elif literal.literal_type == "null":
+            return "null"
         else:
             return str(literal.value)
     
@@ -311,6 +313,10 @@ class CodeGenerator:
                     return f"System.Console.WriteLine({args})"
             
             obj = self.generate_expression(method_call.object_ref)
+            
+            # Java array length -> C# Length property
+            if method_call.method_name == "length" and not method_call.arguments:
+                return f"{obj}.Length"
             
             # Handle System.out.println() -> System.Console.WriteLine()
             if obj == "System.out" and method_call.method_name == "println":

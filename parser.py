@@ -468,6 +468,9 @@ class Parser:
         
         if self.consume(TokenType.FALSE):
             return Literal(False, "boolean")
+
+        if self.consume(TokenType.NULL):
+            return Literal(None, "null")
         
         # Identifier or method call
         if self.match(TokenType.IDENTIFIER):

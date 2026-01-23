@@ -14,4 +14,11 @@ class Person {
     public int getAge() {
         return age;
     }
+
+    public static void main(String[] args) {
+        Person p = new Person();
+        p.displayInfo();
+        p.setAge(42);
+        System.out.println("Age: " + p.getAge());
+    }
 }

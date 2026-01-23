@@ -16,4 +16,13 @@ class ControlFlow {
             return false;
         }
     }
+
+    public static void main(String[] args) {
+        ControlFlow cf = new ControlFlow();
+        cf.checkNumber(5);
+        cf.checkNumber(-2);
+        cf.checkNumber(0);
+        System.out.println("Even: " + cf.isEven(4));
+        System.out.println("Even: " + cf.isEven(7));
+    }
 }

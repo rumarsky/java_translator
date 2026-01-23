@@ -23,4 +23,12 @@ class BankAccount {
     public double getBalance() {
         return balance;
     }
+
+    public static void main(String[] args) {
+        BankAccount account = new BankAccount();
+        account.deposit(500.0);
+        System.out.println("Balance: " + account.getBalance());
+        System.out.println("Withdraw ok: " + account.withdraw(200.0));
+        System.out.println("Balance: " + account.getBalance());
+    }
 }

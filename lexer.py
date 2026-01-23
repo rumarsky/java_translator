@@ -23,6 +23,7 @@ class TokenType(Enum):
     NEW = auto()
     TRUE = auto()
     FALSE = auto()
+    NULL = auto()
     
     # Literals
     IDENTIFIER = auto()
@@ -94,6 +95,7 @@ class Lexer:
         'new': TokenType.NEW,
         'true': TokenType.TRUE,
         'false': TokenType.FALSE,
+        'null': TokenType.NULL,
     }
     
     def __init__(self, code: str):

@@ -16,4 +16,10 @@ class Loops {
         }
         return result;
     }
+
+    public static void main(String[] args) {
+        Loops loops = new Loops();
+        System.out.println(loops.sumNumbers(10));
+        System.out.println(loops.factorial(5));
+    }
 }
